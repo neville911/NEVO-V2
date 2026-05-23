@@ -1,0 +1,14 @@
+{
+  "name": "NEVO Cinematic Protocol",
+  "short_name": "NEVO",
+  "description": "Your personal cinematic fitness protocol",
+  "start_url": "/NEVO/",
+  "display": "standalone",
+  "background_color": "#060C06",
+  "theme_color": "#060C06",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
