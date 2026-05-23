@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NEVO">
+<meta name="theme-color" content="#060C06">
+<link rel="manifest" href="manifest.json">
+<title>NEVO | Cinematic Protocol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060C06; --s1:#0D160D; --s2:#141F14; --s3:#1C2A1C;
+  --lime:#A8E63C; --lime-dim:rgba(168,230,60,.13); --lime-mid:rgba(168,230,60,.35);
+  --green:#52C87A; --green-dim:rgba(82,200,122,.13);
+  --red:#E05252; --blue:#52A8E6;
+  --text:#F0F0F0; --muted:#7A9A7A; --dim:#334433; --border:#1C2A1C;
+  --nav:64px; --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+.sp-ring{width:110px;height:110px;border-radius:50%;border:2px solid var(--lime-mid);display:flex;align-items:center;justify-content:center;margin-bottom:28px;position:relative}
+.sp-ring::before{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid var(--lime-dim)}
+.sp-logo{font-family:"Oswald",sans-serif;font-size:42px;font-weight:700;letter-spacing:.15em;color:var(--lime)}
+.sp-tag{font-size:9px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:40px}
+.sp-bar{width:70px;height:2px;background:var(--border);border-radius:2px;overflow:hidden}
+.sp-fill{height:100%;width:0;background:var(--lime);border-radius:2px;transition:width 1.5s ease}
+
+/* APP SHELL */
+#app{position:fixed;inset:0;display:flex;flex-direction:column;padding-top:var(--safe-t);display:none}
+
+/* HEADER */
+.hdr{flex-shrink:0;padding:12px 18px 8px;display:flex;align-items:center;gap:12px}
+.hdr-av{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--lime-mid);flex-shrink:0}
+.hdr-txt{flex:1}
+.hdr-greet{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.hdr-name{font-family:"Oswald",sans-serif;font-size:19px;font-weight:700;letter-spacing:.06em;line-height:1.1}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.streak-badge{background:var(--lime-dim);border:1px solid var(--lime-mid);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;color:var(--lime);display:flex;align-items:center;gap:4px}
+
+/* PAGES */
+.pages{flex:1;overflow:hidden;position:relative}
+.pg{position:absolute;inset:0;overflow-y:auto;padding-bottom:calc(var(--nav) + var(--safe-b) + 8px);opacity:0;transform:translateY(8px);transition:all .22s ease;pointer-events:none;-webkit-overflow-scrolling:touch}
+.pg.active{opacity:1;transform:none;pointer-events:all}
+.pi{padding:0 16px}
+
+/* NAV */
+.nav{flex-shrink:0;height:calc(var(--nav) + var(--safe-b));padding-bottom:var(--safe-b);background:var(--s1);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:8px}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:5px 0}
+.ni-ic{font-size:21px;transition:transform .2s}
+.ni-lb{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);transition:color .2s;font-weight:600}
+.ni.on .ni-lb{color:var(--lime)}
+.ni.on .ni-ic{transform:scale(1.1)}
+
+/* SHARED */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:12px}
+.slbl{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin:18px 0 10px;font-weight:600}
+.btn-prime{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--lime);color:#050C05;border:none;border-radius:14px;padding:14px 24px;font-family:"Oswald",sans-serif;font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:all .18s;width:100%}
+.btn-prime:active{transform:scale(.97);filter:brightness(.88)}
+.empty{text-align:center;padding:30px;color:var(--dim);font-size:13px}
+.empty-ic{font-size:40px;margin-bottom:10px}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+/* ── HOME ── */
+.week-strip{display:flex;gap:5px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.week-strip::-webkit-scrollbar{display:none}
+.wd{flex-shrink:0;width:40px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.wd-l{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.wd-n{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"Oswald",sans-serif;font-size:14px;font-weight:700;color:var(--muted);background:var(--s2);border:1px solid var(--border);transition:all .18s}
+.wd.today .wd-n{background:var(--lime);color:#050C05;border-color:var(--lime)}
+.wd.done .wd-n{background:var(--green-dim);border-color:rgba(82,200,122,.4);color:var(--green)}
+.wd.rest .wd-l{color:var(--dim)}
+.wd.rest .wd-n{color:var(--dim)}
+
+.today-hero{border-radius:22px;overflow:hidden;position:relative;margin-bottom:12px;min-height:180px;background:var(--s2);border:1px solid var(--border)}
+.th-img{width:100%;height:200px;object-fit:cover;display:block}
+.th-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,12,6,.1) 0%,rgba(6,12,6,.85) 100%)}
+.th-content{position:absolute;bottom:0;left:0;right:0;padding:16px}
+.th-tag{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--lime);font-weight:700;margin-bottom:3px}
+.th-name{font-family:"Oswald",sans-serif;font-size:28px;font-weight:700;letter-spacing:.04em;line-height:1}
+.th-sub{font-size:11px;color:rgba(240,240,240,.7);margin:3px 0 10px}
+.th-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{background:rgba(255,255,255,.1);backdrop-filter:blur(6px);border-radius:20px;padding:3px 10px;font-size:10px;color:rgba(240,240,240,.8)}
+
+.loc-pick{display:flex;gap:8px;margin-bottom:14px}
+.lp{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s}
+.lp.sel{background:var(--lime-dim);border-color:var(--lime-mid)}
+.lp-ic{font-size:24px;margin-bottom:4px}
+.lp-n{font-family:"Oswald",sans-serif;font-size:13px;font-weight:600;letter-spacing:.06em}
+.lp.sel .lp-n{color:var(--lime)}
+.lp-s{font-size:10px;color:var(--muted);margin-top:2px}
+
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.sc{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:14px 8px;text-align:center}
+.sv{font-family:"Oswald",sans-serif;font-size:24px;font-weight:700;color:var(--lime);line-height:1}
+.sl{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
+
+.act-item{background:var(--s2);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.ai-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ai-dot.work{background:var(--lime)}
+.ai-dot.water{background:var(--blue)}
+.ai-n{font-size:13px;font-weight:500;flex:1}
+.ai-m{font-size:11px;color:var(--muted)}
+.ai-v{font-family:"Oswald",sans-serif;font-size:16px;font-weight:600;color:var(--text)}
+
+/* ── TRAIN ── */
+.ptabs{display:flex;background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:4px;margin-bottom:14px}
+.pt{flex:1;padding:10px;border-radius:11px;text-align:center;cursor:pointer;transition:all .18s;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.pt.on{background:var(--lime);color:#050C05}
+
+.day-card{background:var(--s1);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:10px;cursor:pointer;transition:all .2s;display:flex;align-items:stretch}
+.day-card:active{transform:scale(.98);border-color:var(--lime-mid)}
+.dc-accent{width:5px;flex-shrink:0}
+.dc-img{width:80px;height:80px;object-fit:cover;flex-shrink:0}
+.dc-body{flex:1;padding:12px 14px}
+.dc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.dc-name{font-family:"Oswald",sans-serif;font-size:16px;font-weight:600;letter-spacing:.05em}
+.dc-day{font-size:10px;color:var(--lime);font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.dc-tag{font-size:11px;color:var(--muted)}
+.dc-muscles{font-size:10px;color:var(--dim);margin-top:4px}
+
+/* ── WORKOUT OVERLAY ── */
+#wo{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;padding-top:var(--safe-t);transform:translateY(100%);transition:transform .32s cubic-bezier(.4,0,.2,1)}
+#wo.open{transform:none}
+
+.wo-hdr{padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.btn-x{width:36px;height:36px;border-radius:10px;background:var(--s2);border:none;color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wo-meta{flex:1}
+.wo-meta h2{font-family:"Oswald",sans-serif;font-size:17px;font-weight:600;letter-spacing:.04em}
+.wo-meta p{font-size:11px;color:var(--muted)}
+.wo-clock{font-family:"Oswald",sans-serif;font-size:17px;font-weight:700;color:var(--lime);flex-shrink:0}
+
+.wo-prog-bar{height:3px;background:var(--s3);flex-shrink:0}
+.wo-pf{height:100%;background:var(--lime);transition:width .3s}
+
+/* EXERCISE SLIDE */
+.ex-slide{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.ex-img-wrap{position:relative;flex-shrink:0}
+.ex-img{width:100%;height:200px;object-fit:cover;display:block}
+.ex-img-ov{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,var(--bg) 100%)}
+.ex-counter{position:absolute;top:12px;right:12px;background:rgba(6,12,6,.75);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--lime)}
+
+.ex-detail{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch}
+.ex-name-big{font-family:"Oswald",sans-serif;font-size:26px;font-weight:700;letter-spacing:.04em;line-height:1.1;margin-bottom:4px}
+.ex-equip{font-size:12px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ex-note-box{background:var(--lime-dim);border:1px solid var(--lime-mid);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:12px;color:rgba(240,240,240,.85);line-height:1.6}
+
+/* SETS */
+.sets-hdr{display:grid;grid-template-columns:28px 1fr 1fr 36px;gap:8px;padding:0 2px;margin-bottom:6px}
+.sh-l{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);font-weight:600;text-align:center}
+.set-row{display:grid;grid-template-columns:28px 1fr 1fr 36px;gap:8px;align-items:center;background:var(--s2);border-radius:12px;padding:10px 10px;margin-bottom:6px;border:1px solid transparent;transition:all .18s}
+.set-row.done{background:var(--green-dim);border-color:rgba(82,200,122,.3)}
+.set-num{font-size:11px;font-weight:700;color:var(--dim);text-align:center}
+.set-in{width:100%;background:var(--s3);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:"Oswald",sans-serif;font-size:17px;font-weight:600;text-align:center;padding:7px 4px;outline:none}
+.set-row.done .set-in{background:transparent;border-color:transparent;color:var(--green)}
+.set-chk{width:34px;height:34px;border-radius:9px;border:2px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all .18s;font-weight:700;color:transparent}
+.set-row.done .set-chk{background:var(--green);border-color:var(--green);color:#050C05}
+
+/* TIMED exercise */
+.timed-block{text-align:center;padding:16px 0}
+.timed-ring-wrap{position:relative;width:160px;height:160px;margin:0 auto 16px}
+.timed-ring-wrap svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.tr-bg{fill:none;stroke:var(--s3);stroke-width:7}
+.tr-fill{fill:none;stroke:var(--lime);stroke-width:7;stroke-linecap:round;stroke-dasharray:440;stroke-dashoffset:0;transition:stroke-dashoffset .5s linear}
+.timed-disp{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.timed-num{font-family:"Oswald",sans-serif;font-size:42px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.timed-sub{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.16em}
+.btn-timed{padding:13px 32px;border-radius:13px;background:var(--lime);border:none;color:#050C05;font-family:"Oswald",sans-serif;font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:all .18s;margin:0 6px}
+.btn-timed:active{transform:scale(.97)}
+.btn-timed.ghost{background:var(--s2);border:1px solid var(--border);color:var(--muted)}
+
+/* REST TIMER in workout */
+.rest-banner{background:var(--s2);border:1px solid var(--lime-mid);border-radius:16px;padding:14px 16px;margin:14px 0;display:flex;align-items:center;gap:14px}
+.rb-ring{position:relative;width:56px;height:56px;flex-shrink:0}
+.rb-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.rb-bg{fill:none;stroke:var(--s3);stroke-width:5}
+.rb-fill{fill:none;stroke:var(--lime);stroke-width:5;stroke-linecap:round;stroke-dasharray:160;stroke-dashoffset:0;transition:stroke-dashoffset .5s linear}
+.rb-disp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:"Oswald",sans-serif;font-size:14px;font-weight:700;color:var(--lime)}
+.rb-right{flex:1}
+.rb-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:var(--muted);margin-bottom:3px}
+.rb-msg{font-size:13px;font-weight:500}
+.btn-skip-sm{padding:8px 14px;border-radius:10px;background:var(--lime-dim);border:1px solid var(--lime-mid);color:var(--lime);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;flex-shrink:0;transition:all .18s}
+
+/* NAV BTNS between exercises */
+.ex-nav{flex-shrink:0;padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px;padding-bottom:calc(12px + var(--safe-b))}
+.btn-prev{flex:0 0 50px;background:var(--s2);border:1px solid var(--border);border-radius:13px;color:var(--muted);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.btn-next{flex:1;background:var(--lime);border:none;border-radius:13px;padding:14px;color:#050C05;font-family:"Oswald",sans-serif;font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:all .18s}
+.btn-next:active{transform:scale(.97)}
+
+/* WARMUP / COOLDOWN overlay */
+.phase-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.phase-ic{font-size:64px;margin-bottom:16px}
+.phase-title{font-family:"Oswald",sans-serif;font-size:32px;font-weight:700;letter-spacing:.05em;margin-bottom:6px}
+.phase-sub{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:28px}
+.phase-list{text-align:left;width:100%;max-width:320px;margin-bottom:28px}
+.phase-li{display:flex;align-items:center;gap:12px;background:var(--s2);border-radius:12px;padding:12px 14px;margin-bottom:8px;font-size:13px}
+
+/* SESSION COMPLETE */
+#sc{position:fixed;inset:0;background:rgba(6,12,6,.97);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;opacity:0;pointer-events:none;transition:opacity .3s}
+#sc.vis{opacity:1;pointer-events:all}
+.sc-ring{width:100px;height:100px;border-radius:50%;background:var(--lime-dim);border:2px solid var(--lime-mid);display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:20px}
+.sc-t{font-family:"Oswald",sans-serif;font-size:36px;font-weight:700;letter-spacing:.05em;text-align:center;margin-bottom:4px}
+.sc-s{color:var(--muted);text-align:center;margin-bottom:28px;font-size:13px}
+.sc-stats{display:flex;gap:24px;margin-bottom:32px}
+.sc-stat{text-align:center}
+.sc-sv{font-family:"Oswald",sans-serif;font-size:28px;font-weight:700;color:var(--lime)}
+.sc-sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+
+/* ── PROGRESS ── */
+.chart-wrap{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:12px}
+.cw-title{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:600}
+.pr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pr-item{background:var(--s2);border-radius:14px;padding:13px}
+.pr-n{font-size:10px;color:var(--muted);letter-spacing:.06em;margin-bottom:4px}
+.pr-v{font-family:"Oswald",sans-serif;font-size:22px;font-weight:700;color:var(--lime)}
+.pr-d{font-size:10px;color:var(--dim)}
+.m-row{display:flex;gap:6px;margin-bottom:6px}
+.m-in{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:"Oswald",sans-serif;font-size:20px;font-weight:600;text-align:center;padding:12px;outline:none}
+.btn-log{background:var(--lime-dim);border:1px solid var(--lime-mid);color:var(--lime);border-radius:12px;padding:12px 16px;font-family:"Oswald",sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .18s}
+.btn-log:active{transform:scale(.97)}
+.body-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.body-item{background:var(--s2);border-radius:14px;padding:12px}
+.bi-l{font-size:10px;color:var(--muted);margin-bottom:4px}
+.bi-v{font-family:"Oswald",sans-serif;font-size:20px;font-weight:700;color:var(--text)}
+.bi-in{width:100%;background:transparent;border:none;color:var(--text);font-family:"Oswald",sans-serif;font-size:20px;font-weight:700;outline:none;-moz-appearance:textfield}
+
+/* ── DIET ── */
+.macro-grid{display:flex;gap:7px;margin-bottom:12px}
+.mg{flex:1;background:var(--s2);border-radius:14px;padding:12px 6px;text-align:center}
+.mg .mv{font-family:"Oswald",sans-serif;font-size:18px;font-weight:700;line-height:1}
+.mg .ml{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
+.mg.cal .mv{color:var(--lime)}
+.mg.prot .mv{color:var(--blue)}
+.mg.carb .mv{color:var(--green)}
+.mg.fat .mv{color:var(--red)}
+.target-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.target-bar-bg{flex:1;height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.target-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.target-lbl{font-size:10px;color:var(--muted);white-space:nowrap}
+.water-card{background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.wl{flex:1}
+.wl p{font-size:11px;color:var(--muted)}
+.wl h3{font-family:"Oswald",sans-serif;font-size:22px;font-weight:700;color:var(--blue)}
+.w-btns{display:flex;gap:6px}
+.w-btn{width:36px;height:36px;border-radius:10px;background:var(--s3);border:1px solid var(--border);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.food-form{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px}
+.food-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px;margin-bottom:6px}
+.fi{background:var(--s2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;padding:8px 10px;outline:none;font-family:"DM Sans",sans-serif;-moz-appearance:textfield;width:100%}
+.fi::placeholder{color:var(--dim)}
+.food-item{display:flex;align-items:center;gap:10px;background:var(--s2);border-radius:12px;padding:10px 13px;margin-bottom:6px}
+.fi-n{flex:1;font-size:13px;font-weight:500}
+.fi-c{font-size:12px;color:var(--lime);font-weight:600}
+.fi-m{font-size:10px;color:var(--dim)}
+.fi-del{background:none;border:none;color:var(--dim);font-size:19px;cursor:pointer;padding:2px 4px}
+
+/* ── PROFILE / SETTINGS ── */
+.profile-av-wrap{display:flex;flex-direction:column;align-items:center;padding:24px 0 16px}
+.profile-av{width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid var(--lime-mid)}
+.profile-name{font-family:"Oswald",sans-serif;font-size:24px;font-weight:700;letter-spacing:.05em;margin-top:10px}
+.profile-sub{font-size:12px;color:var(--muted)}
+.settings-section{margin-bottom:6px}
+.settings-row{display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--border);padding:14px 16px;cursor:pointer;transition:background .18s}
+.settings-row:first-child{border-radius:14px 14px 0 0}
+.settings-row:last-child{border-radius:0 0 14px 14px;border-top:none}
+.settings-row:only-child{border-radius:14px}
+.settings-row + .settings-row{border-top:none}
+.sr-ic{font-size:20px;width:32px;text-align:center}
+.sr-txt{flex:1}
+.sr-lbl{font-size:14px;font-weight:500}
+.sr-sub{font-size:11px;color:var(--muted)}
+.sr-arrow{color:var(--dim);font-size:18px}
+.toggle{width:44px;height:26px;border-radius:13px;background:var(--s3);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:all .2s}
+.toggle.on{background:var(--lime)}
+.toggle.on::after{left:21px;background:#050C05}
+
+/* ── STANDALONE TIMER ── */
+.timer-pg{display:flex;flex-direction:column;align-items:center;padding:20px 16px}
+.t-ring-wrap{position:relative;width:210px;height:210px;margin:24px auto}
+.t-ring-wrap svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.t-bg{fill:none;stroke:var(--s3);stroke-width:7}
+.t-fill{fill:none;stroke:var(--lime);stroke-width:7;stroke-linecap:round;stroke-dasharray:597;stroke-dashoffset:0;transition:stroke-dashoffset .5s linear}
+.t-disp{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.t-num{font-family:"Oswald",sans-serif;font-size:58px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.t-sub{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.2em}
+.t-presets{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.tpb{padding:10px 16px;border-radius:12px;background:var(--s2);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
+.tpb.on{background:var(--lime-dim);border-color:var(--lime-mid);color:var(--lime)}
+.t-btns{display:flex;gap:10px;margin-top:22px}
+.btn-t{padding:14px 32px;border-radius:14px;background:var(--lime);border:none;color:#050C05;font-family:"Oswald",sans-serif;font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:all .18s;min-width:130px}
+.btn-t:active{transform:scale(.97)}
+.btn-t-g{padding:14px 18px;border-radius:14px;background:var(--s2);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(6,12,6,.85);z-index:400;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;padding-bottom:var(--safe-b)}
+.modal-overlay.vis{opacity:1;pointer-events:all}
+.modal-box{background:var(--s1);border:1px solid var(--border);border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:20px 20px calc(20px + var(--safe-b));transform:translateY(20px);transition:transform .28s;max-height:80vh;overflow-y:auto}
+.modal-overlay.vis .modal-box{transform:none}
+.modal-title{font-family:"Oswald",sans-serif;font-size:18px;font-weight:700;letter-spacing:.05em;margin-bottom:14px}
+.modal-input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;padding:12px 14px;outline:none;font-family:"DM Sans",sans-serif;margin-bottom:10px}
+.modal-input::placeholder{color:var(--dim)}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(var(--nav) + var(--safe-b) + 14px);left:50%;transform:translateX(-50%) translateY(12px);background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:9px 18px;font-size:13px;color:var(--text);opacity:0;transition:all .22s;white-space:nowrap;z-index:500;backdrop-filter:blur(8px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="sp-ring"><div class="sp-logo">NEVO</div></div>
+  <div class="sp-tag">Cinematic Protocol</div>
+  <div class="sp-bar"><div class="sp-fill" id="spf"></div></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="hdr">
+    <img class="hdr-av" id="hdr-av" src="data:image/jpeg;base64,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" alt="Nevo">
+    <div class="hdr-txt">
+      <div class="hdr-greet" id="hdr-g">Good Morning</div>
+      <div class="hdr-name">NEVO</div>
+    </div>
+    <div class="hdr-right">
+      <div class="streak-badge" id="streak-badge">🔥 0</div>
+    </div>
+  </div>
+  <div class="pages">
+    <div class="pg active" id="pg-home"><div class="pi" id="home-c"></div></div>
+    <div class="pg" id="pg-train"><div class="pi" id="train-c"></div></div>
+    <div class="pg" id="pg-progress"><div class="pi" id="progress-c"></div></div>
+    <div class="pg" id="pg-diet"><div class="pi" id="diet-c"></div></div>
+    <div class="pg" id="pg-timer"><div class="pi" id="timer-c"></div></div>
+    <div class="pg" id="pg-profile"><div class="pi" id="profile-c"></div></div>
+  </div>
+  <div class="nav">
+    <div class="ni on" data-p="home"><div class="ni-ic">⚡</div><div class="ni-lb">Home</div></div>
+    <div class="ni" data-p="train"><div class="ni-ic">💪</div><div class="ni-lb">Train</div></div>
+    <div class="ni" data-p="progress"><div class="ni-ic">📈</div><div class="ni-lb">Progress</div></div>
+    <div class="ni" data-p="diet"><div class="ni-ic">🥗</div><div class="ni-lb">Diet</div></div>
+    <div class="ni" data-p="timer"><div class="ni-ic">⏱</div><div class="ni-lb">Timer</div></div>
+    <div class="ni" data-p="profile"><div class="ni-ic">👤</div><div class="ni-lb">Profile</div></div>
+  </div>
+</div>
+
+<!-- WORKOUT OVERLAY -->
+<div id="wo">
+  <div class="wo-hdr">
+    <button class="btn-x" id="wo-x">✕</button>
+    <div class="wo-meta"><h2 id="wo-title">Push A</h2><p id="wo-sub">Pure Weightlifting</p></div>
+    <div class="wo-clock" id="wo-clock">0:00</div>
+  </div>
+  <div class="wo-prog-bar"><div class="wo-pf" id="wo-pf" style="width:0%"></div></div>
+  <div id="wo-body" style="flex:1;display:flex;flex-direction:column;overflow:hidden"></div>
+</div>
+
+<!-- SESSION COMPLETE -->
+<div id="sc">
+  <div class="sc-ring">🏆</div>
+  <div class="sc-t">SESSION<br>EXECUTED</div>
+  <div class="sc-s" id="sc-sub">Protocol committed.</div>
+  <div class="sc-stats">
+    <div class="sc-stat"><div class="sc-sv" id="sc-dur">0m</div><div class="sc-sl">Duration</div></div>
+    <div class="sc-stat"><div class="sc-sv" id="sc-sets">0</div><div class="sc-sl">Sets</div></div>
+    <div class="sc-stat"><div class="sc-sv" id="sc-vol">0</div><div class="sc-sl">Vol(kg)</div></div>
+  </div>
+  <button class="btn-prime" onclick="closeSC()" style="max-width:260px">COMMIT TO LOG</button>
+</div>
+
+<!-- MODAL (generic) -->
+<div class="modal-overlay" id="modal-ov" onclick="closeModal(event)">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+// PROGRAMS
+// ═══════════════════════════════════════
+const IMGS = {
+  push:'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80',
+  pull:'https://images.unsplash.com/photo-1611672585731-fa10603fb9e0?w=600&q=80',
+  legs:'https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?w=600&q=80',
+  shoulders:'https://images.unsplash.com/photo-1532029837206-abbe2b7620e3?w=600&q=80',
+  bicep:'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600&q=80',
+  squat:'https://images.unsplash.com/photo-1567598508481-65985588e295?w=600&q=80',
+  cali:'https://images.unsplash.com/photo-1616803689943-5601631c7fec?w=600&q=80',
+  core:'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80',
+  default:'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80'
+};
+function exImg(n){ n=n.toLowerCase(); if(n.includes('bench')||n.includes('chest')||n.includes('press')) return IMGS.push; if(n.includes('row')||n.includes('pull')||n.includes('curl')&&!n.includes('squat')) return IMGS.pull; if(n.includes('squat')||n.includes('lunge')||n.includes('leg')) return IMGS.squat; if(n.includes('shoulder')||n.includes('lateral')||n.includes('arnold')) return IMGS.shoulders; if(n.includes('bicep')||n.includes('hammer')) return IMGS.bicep; if(n.includes('calf')||n.includes('deadlift')) return IMGS.legs; if(n.includes('push-up')||n.includes('dip')||n.includes('calisthen')) return IMGS.cali; if(n.includes('core')||n.includes('hollow')||n.includes('crunch')||n.includes('plank')||n.includes('bridge')) return IMGS.core; return IMGS.default; }
+
+const WARMUP = ['5 min light jog / jump rope','Arm circles — 10 each direction','Hip circles — 10 each direction','Bodyweight squats × 10','Shoulder rotations × 10','Dynamic lunges × 5 each leg'];
+const COOLDOWN = ['Full body stretch — 5 min','Hamstring stretch — 30s each','Hip flexor stretch — 30s each','Chest opener stretch — 30s','Shoulder cross-body stretch — 30s','Deep breathing — 1 min'];
+
+const PROGS = {
+  gym:{name:'Pure Weightlifting',sub:'Free-Weight Aesthetic Split',days:[
+    {id:'pushA',name:'Push A',label:'Monday',tag:'Explosive Power',muscles:['Chest','Shoulders','Triceps'],
+     exs:[{n:'Barbell Bench Press',s:5,r:'5',rest:120,type:'weight',note:'Explosive up · 2s controlled descent'},
+          {n:'Seated DB Shoulder Press',s:3,r:'8',rest:90,type:'weight',note:'Heavy · Full lockout, no shrug'},
+          {n:'Lying DB Tricep Extensions',s:3,r:'12',rest:90,type:'weight',note:'Lower slowly to sides of temples'},
+          {n:'Standing DB Lateral Raises',s:3,r:'15',rest:60,type:'weight',note:'Pinkies high · Strict side delt'}]},
+    {id:'pullA',name:'Pull A',label:'Tuesday',tag:'Hypertrophy + HIIT',muscles:['Back','Biceps','Rear Delts'],
+     cardio:'Treadmill Sprints: 30s max / 60s rest × 10',
+     exs:[{n:'Barbell Rows (Underhand)',s:3,r:'10–12',rest:90,type:'weight',note:'Pull to lower stomach · 1s squeeze'},
+          {n:'Lying DB Pullovers',s:3,r:'12',rest:90,type:'weight',note:'Constant lat tension at bottom sweep'},
+          {n:'Incline DB Bicep Curls',s:3,r:'12',rest:60,type:'weight',note:'Full stretch at bottom · Max peak'},
+          {n:'Seated DB Shrugs',s:3,r:'15',rest:60,type:'weight',note:'Slow rotation at top for trap thickness'},
+          {n:'Lying Leg Raises',s:3,r:'15',rest:60,type:'weight',note:'Control full eccentric descent'}]},
+    {id:'legsA',name:'Legs A',label:'Wednesday',tag:'Explosive Power',muscles:['Quads','Hamstrings','Calves'],
+     exs:[{n:'Barbell Squats',s:5,r:'5',rest:120,type:'weight',note:'Drive out of hole · Tight core brace'},
+          {n:'DB Romanian Deadlifts',s:3,r:'10',rest:90,type:'weight',note:'Push hips back · Feel hamstring stretch'},
+          {n:'Standing DB Calf Raises',s:4,r:'15',rest:60,type:'weight',note:'2s pause at peak · Deep heel drop'}]},
+    {id:'pushB',name:'Push B',label:'Thursday',tag:'Hypertrophy + HIIT',muscles:['Upper Chest','Shoulders','Triceps'],
+     cardio:'Treadmill Sprints: 30s max / 60s rest × 10',
+     exs:[{n:'Incline DB Bench Press',s:3,r:'10–12',rest:90,type:'weight',note:'3-1-1 tempo · Upper chest focus'},
+          {n:'Seated DB Arnold Press',s:3,r:'10',rest:90,type:'weight',note:'Rotational · Front & lateral head'},
+          {n:'Standing DB Lateral Raises',s:4,r:'15–20',rest:60,type:'weight',note:'High-volume · Maximum blood flow'},
+          {n:'DB Overhead Tricep Extension',s:3,r:'12',rest:60,type:'weight',note:'Elbows pinned forward · Deep stretch'}]},
+    {id:'pullB',name:'Pull B',label:'Friday',tag:'Explosive Power',muscles:['Back','Biceps','Forearms'],
+     exs:[{n:'Power Barbell Rows (Overhand)',s:5,r:'5',rest:120,type:'weight',note:'Explosive from below knees to waist'},
+          {n:'DB Hammer Curls',s:3,r:'10',rest:90,type:'weight',note:'Heavy · Target brachialis for arm width'},
+          {n:"DB Farmer's Carries",s:3,r:'40m',rest:90,type:'weight',note:'Grip endurance · Total-body stability'},
+          {n:'Seated DB Weighted Crunches',s:3,r:'15',rest:60,type:'weight',note:'Flex spine against load · Isolate abs'}]},
+    {id:'legsB',name:'Legs B',label:'Saturday',tag:'Hypertrophy + LISS',muscles:['Quads','Glutes','Calves'],
+     cardio:'30-min aerobic jog — active recovery',
+     exs:[{n:'DB Goblet Squats',s:3,r:'15',rest:90,type:'weight',note:'Deep · No lockout at top'},
+          {n:'DB Walking Lunges',s:3,r:'12/leg',rest:90,type:'weight',note:'Torso upright · Target quad sweep'},
+          {n:'Seated Calf Raises',s:4,r:'20',rest:60,type:'weight',note:'High-volume metabolic pump sets'}]}
+  ]},
+  home:{name:'Home Aesthetic',sub:'Improvised Equipment & Calisthenics',days:[
+    {id:'homePush',name:'Push Day',label:'Days 1 & 4',tag:'Chest · Shoulders · Triceps',muscles:['Chest','Shoulders','Triceps'],
+     exs:[{n:'Decline Chair Push-Ups',s:4,r:'Failure',rest:90,type:'weight',load:'Bodyweight',note:'Feet on chair · Hands on floor · Tech failure'},
+          {n:'Weighted Chair Dips',s:4,r:'10–15',rest:90,type:'weight',load:'BW + 10L Jerry',note:'10L jerrycan stabilized on lap'},
+          {n:'Jerrycan Overhead Press',s:3,r:'12–15',rest:90,type:'weight',load:'10–20L',note:'Strict standing · Deep core stabilization'},
+          {n:'Pike Push-Ups',s:3,r:'Failure',rest:60,type:'weight',load:'Bodyweight',note:'Hips jackknifed high · Skull to floor'}]},
+    {id:'homePull',name:'Pull Day',label:'Days 2 & 5',tag:'Back · Biceps · Rear Delts',muscles:['Back','Biceps','Rear Delts'],
+     exs:[{n:'Single-Arm Jerrycan Rows',s:5,r:'8–12',rest:90,type:'weight',load:'20L',note:'Brace on chair · Row to hip crease'},
+          {n:'Jerrycan Bicep Curls',s:4,r:'12',rest:60,type:'weight',load:'10–20L',note:'Elbows glued to ribs · Strict form'},
+          {n:'Jerrycan Upright Rows',s:4,r:'15',rest:60,type:'weight',load:'10L',note:'Drive elbows high · Frame lateral delts'},
+          {n:'Reverse Floor Angels',s:3,r:'20',rest:60,type:'weight',load:'Bodyweight',note:'Face down · Continuous blade compression'}]},
+    {id:'homeLegs',name:'Legs & Core',label:'Days 3 & 6',tag:'Legs · Glutes · Core',muscles:['Quads','Glutes','Core'],
+     exs:[{n:'Bulgarian Split Squats',s:4,r:'10/leg',rest:90,type:'weight',load:'1–2 Jerrycans',note:'Rear foot elevated on chair'},
+          {n:'Jerrycan Goblet Squats',s:4,r:'15',rest:90,type:'weight',load:'20L',note:'Hug to chest · Past parallel'},
+          {n:'Single-Leg Glute Bridges',s:4,r:'15',rest:60,type:'weight',load:'Bodyweight',note:'Isometric glute lock at peak'},
+          {n:'Hollow Body Holds',s:4,r:'30s',rest:60,type:'time',dur:30,note:'Lumbar flat into floor · Tech failure'},
+          {n:'Jerrycan Calf Raises',s:4,r:'25',rest:60,type:'weight',load:'20L',note:'Slow execution off step or book block'}]}
+  ]}
+};
+
+// ═══════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════
+const DB={
+  g:(k,d=null)=>{try{const v=localStorage.getItem('nv_'+k);return v!==null?JSON.parse(v):d}catch{return d}},
+  s:(k,v)=>{try{localStorage.setItem('nv_'+k,JSON.stringify(v))}catch{}}
+};
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let curPage='home', selProg='gym', homeLoc=null;
+let WO=null, woClkIv=null, woPhase='warmup', woExIdx=0;
+let timedIv=null, timedRem=0, timedTotal=0, timedRunning=false;
+let restIv=null, restRem=0, restTotal=0;
+let stTotal=90, stRem=90, stRunning=false, stIv=null;
+
+// ═══════════════════════════════════════
+// ROUTER
+// ═══════════════════════════════════════
+function nav(p){
+  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('on'));
+  document.getElementById('pg-'+p).classList.add('active');
+  const ni=document.querySelector('[data-p="'+p+'"]');
+  if(ni) ni.classList.add('on');
+  curPage=p;
+  const renders={home:renderHome,train:renderTrain,progress:renderProgress,diet:renderDiet,timer:renderTimer,profile:renderProfile};
+  if(renders[p]) renders[p]();
+}
+document.querySelectorAll('.ni').forEach(n=>n.addEventListener('click',()=>nav(n.dataset.p)));
+
+// ═══════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════
+let toastT;
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2500)}
+
+// ═══════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════
+function greet(){const h=new Date().getHours();return h<12?'Good Morning':h<17?'Good Afternoon':'Good Evening'}
+function fmtD(ds){const d=new Date(ds),n=new Date();n.setHours(0,0,0,0);const y=new Date(n);y.setDate(y.getDate()-1);if(d.toDateString()===n.toDateString())return'Today';if(d.toDateString()===y.toDateString())return'Yesterday';return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}
+function streak(){
+  const ss=DB.g('sessions',[]);if(!ss.length)return 0;
+  let c=0;const n=new Date();n.setHours(0,0,0,0);const d=new Date(n);
+  while(true){const ds=d.toDateString();if(ss.some(s=>new Date(s.date).toDateString()===ds)){c++;d.setDate(d.getDate()-1);}else if(ds===n.toDateString())break;else break;}
+  return c;
+}
+function todayDayIdx(){const d=new Date().getDay();const map={1:0,2:1,3:2,4:3,5:4,6:5};return map[d]!==undefined?map[d]:-1}
+
+// ═══════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════
+function renderHome(){
+  const st=streak();
+  document.getElementById('hdr-g').textContent=greet();
+  document.getElementById('streak-badge').textContent='🔥 '+st+' day'+(st!==1?'s':'');
+  const ss=DB.g('sessions',[]);
+  const wl=DB.g('weightLog',[]);
+  const dayIdx=todayDayIdx();
+  const isRest=dayIdx===-1;
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const today=new Date().getDay();
+  // week strip (Mon=1 to Sun=0)
+  const weekOrder=[1,2,3,4,5,6,0];
+  const weekH=weekOrder.map(d=>{
+    const lbl=days[d===0?6:d-1];
+    const isTod=d===today;
+    const isPast=!isTod&&(d===0||(d<today&&today!==0)||weekOrder.indexOf(d)<weekOrder.indexOf(today));
+    const hasSess=ss.some(s=>{const sd=new Date(s.date).getDay();return sd===d&&new Date(s.date).toDateString()!==new Date().toDateString()});
+    let cls='wd';
+    if(isTod) cls+=' today';
+    else if(hasSess) cls+=' done';
+    else if(d===0) cls+=' rest';
+    const num=new Date();const diff=d-today;num.setDate(num.getDate()+(diff<=0&&!isTod?diff+7:diff));
+    return'<div class="\\${cls}"><div class="wd-l">\\${lbl}</div><div class="wd-n">\\${num.getDate()}</div></div>';
+  }).join('');
+
+  // today hero
+  let heroH='';
+  if(isRest){
+    heroH='<div class="today-hero" style="min-height:140px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px"><div style="font-size:48px">😴</div><div style="font-family:Oswald,sans-serif;font-size:24px;font-weight:700;letter-spacing:.05em">REST DAY</div><div style="font-size:12px;color:var(--muted)">Recovery is part of the protocol.</div></div>';
+  } else {
+    const gymDay=PROGS.gym.days[dayIdx];
+    const homeDay=PROGS.home.days[dayIdx%3];
+    const selDay=homeLoc==='home'?homeDay:gymDay;
+    const img=exImg(selDay.muscles[0]);
+    heroH='<div class="today-hero"><img class="th-img" src="\\${img}" alt="\\${selDay.name}"><div class="th-overlay"></div>\n      <div class="th-content">\n        <div class="th-tag">Today · \\${selDay.label}</div>\n        <div class="th-name">\\${selDay.name}</div>\n        <div class="th-sub">\\${selDay.tag}</div>\n        <div class="th-chips">\\${selDay.muscles.map(m=>'<span class="chip">\${m}</span>').join(\'\')}</div>\n      </div></div>\n    <div class="loc-pick">\n      <div class="lp \\${homeLoc===\'gym\'?\'sel\':\'\'}" onclick="pickLoc(\'gym\')"><div class="lp-ic">🏋️</div><div class="lp-n">GYM</div><div class="lp-s">\\${gymDay.name}</div></div>\n      <div class="lp \\${homeLoc===\'home\'?\'sel\':\'\'}" onclick="pickLoc(\'home\')"><div class="lp-ic">🏠</div><div class="lp-n">HOME</div><div class="lp-s">\\${homeDay.name}</div></div>\n    </div>\n    \\${homeLoc?\'<button class="btn-prime" onclick="startFromHome()">⚡ EXECUTE PROTOCOL</button>\':\'<div style="font-size:12px;color:var(--muted);text-align:center;padding:4px 0">Select where you are training today</div>\'}';
+  }
+
+  const lastW=wl.length?wl[wl.length-1].weight+'kg':'—';
+  const recentH=[...ss].reverse().slice(0,3).map(s=>'\n    <div class="act-item"><div class="ai-dot work"></div>\n      <div><div class="ai-n">\\${s.dayName}</div><div class="ai-m">\\${s.programName} · \\${fmtD(s.date)}</div></div>\n      <div class="ai-v">\\${s.duration}m</div></div>').join('')||'<div class="empty" style="padding:14px;font-size:12px">No sessions yet</div>';
+
+  const todayDiet=getTodayDiet();
+  const todayCal=todayDiet.entries.reduce((a,e)=>a+(e.cal||0),0);
+  const todayWater=todayDiet.water||0;
+
+  document.getElementById('home-c').innerHTML='\n    <div class="week-strip">\\${weekH}</div>\n    \\${heroH}\n    <div class="stats-row">\n      <div class="sc"><div class="sv">\\${ss.length}</div><div class="sl">Sessions</div></div>\n      <div class="sc"><div class="sv">\\${st}</div><div class="sl">Streak</div></div>\n      <div class="sc"><div class="sv">\\${lastW}</div><div class="sl">Weight</div></div>\n    </div>\n    <div class="slbl">Today\'s Activity</div>\n    <div class="act-item"><div class="ai-dot water"></div><div class="ai-n">Water Intake</div><div class="ai-v">\\${todayWater} 💧</div></div>\n    <div class="act-item"><div class="ai-dot" style="background:var(--lime)"></div><div class="ai-n">Calories Logged</div><div class="ai-v">\\${todayCal} kcal</div></div>\n    <div class="slbl">Recent Sessions</div>\\${recentH}\n    <div style="height:8px"></div>';
+}
+
+function pickLoc(loc){homeLoc=loc;renderHome()}
+function startFromHome(){
+  if(!homeLoc)return;
+  const dayIdx=todayDayIdx();
+  if(dayIdx===-1)return;
+  const prog=homeLoc==='home'?'home':'gym';
+  const day=PROGS[prog].days[homeLoc==='home'?dayIdx%3:dayIdx];
+  startSession(prog,day.id);
+}
+
+// ═══════════════════════════════════════
+// TRAIN PAGE
+// ═══════════════════════════════════════
+function renderTrain(){
+  const pr=PROGS[selProg];
+  const dayIdx=todayDayIdx();
+  const dH=pr.days.map((d,i)=>{
+    const isToday=(selProg==='gym'&&i===dayIdx)||(selProg==='home'&&i===dayIdx%3&&dayIdx>=0);
+    const img=exImg(d.muscles[0]);
+    return'<div class="day-card" onclick="startSession(\'\\${selProg}\',\'\\${d.id}\')">\n      <div class="dc-accent" style="background:\\${isToday?\'var(--lime)\':\'var(--border)\'}"></div>\n      <img class="dc-img" src="\\${img}" alt="\\${d.name}">\n      <div class="dc-body">\n        <div class="dc-top"><div class="dc-name">\\${d.name}</div><div class="dc-day">\\${isToday?\'TODAY\':\'\'+d.label}</div></div>\n        <div class="dc-tag">\\${d.tag}</div>\n        <div class="dc-muscles">\\${d.muscles.join(\' · \')}</div>\n      </div></div>';
+  }).join('');
+  document.getElementById('train-c').innerHTML='\n    <div class="ptabs">\n      <div class="pt \\${selProg===\'gym\'?\'on\':\'\'}" onclick="selP(\'gym\')">🏋️ GYM</div>\n      <div class="pt \\${selProg===\'home\'?\'on\':\'\'}" onclick="selP(\'home\')">🏠 HOME</div>\n    </div>\n    <div style="font-size:11px;color:var(--muted);background:var(--s2);border-radius:12px;padding:10px 14px;margin-bottom:14px">\\${pr.sub}</div>\n    \\${dH}\n    <div style="height:8px"></div>';
+}
+function selP(id){selProg=id;renderTrain()}
+
+// ═══════════════════════════════════════
+// START SESSION
+// ═══════════════════════════════════════
+function startSession(progId,dayId){
+  const pr=PROGS[progId];
+  const day=pr.days.find(d=>d.id===dayId);
+  if(!day)return;
+  WO={progId,dayId,progName:pr.name,dayName:day.name,startTime:Date.now(),
+      exs:day.exs.map(ex=>{var cp={n:ex.n,s:ex.s,r:ex.r,rest:ex.rest||0,type:ex.type||'weight',dur:ex.dur||0,note:ex.note||'',load:ex.load||''};cp.sets=Array.from({length:ex.s},function(){return{w:'',r:'',done:false}});return cp;}),
+      cardio:day.cardio||null};
+  woPhase='warmup';woExIdx=0;
+  document.getElementById('wo-title').textContent=day.name;
+  document.getElementById('wo-sub').textContent=pr.name;
+  document.getElementById('wo').classList.add('open');
+  startWoClock();
+  renderWoPhase();
+}
+
+function startWoClock(){
+  clearInterval(woClkIv);
+  const t0=Date.now();
+  woClkIv=setInterval(()=>{
+    const e=Math.floor((Date.now()-t0)/1000);
+    document.getElementById('wo-clock').textContent=Math.floor(e/60)+':'+(e%60+'').padStart(2,'0');
+  },1000);
+}
+
+// ═══════════════════════════════════════
+// WORKOUT PHASES: warmup → exercises → cooldown
+// ═══════════════════════════════════════
+function renderWoPhase(){
+  clearTimedEx(); clearRestTimer();
+  updateWoProg();
+  if(woPhase==='warmup') renderPhaseScreen('warmup');
+  else if(woPhase==='exercise') renderWoEx();
+  else if(woPhase==='cooldown') renderPhaseScreen('cooldown');
+}
+
+function renderPhaseScreen(type){
+  const isWarm=type==='warmup';
+  const items=isWarm?WARMUP:COOLDOWN;
+  const liH=items.map(i=>'<div class="phase-li"><span>\\${isWarm?\'🔥\':\'🧘\'}</span><span>\\${i}</span></div>').join('');
+  document.getElementById('wo-body').innerHTML='\n    <div class="ex-slide">\n      <div class="ex-detail" style="display:flex;flex-direction:column;align-items:center;justify-content:flex-start">\n        <div style="text-align:center;padding:20px 0 16px">\n          <div style="font-size:52px;margin-bottom:12px">\\${isWarm?\'🔥\':\'🧘\'}</div>\n          <div class="phase-title" style="font-family:Oswald,sans-serif;font-size:28px;font-weight:700;letter-spacing:.05em;margin-bottom:6px">\\${isWarm?\'WARM UP\':\'COOL DOWN\'}</div>\n          <div style="font-size:13px;color:var(--muted);margin-bottom:20px">\\${isWarm?\'Prepare your body for the protocol\':\'Bring your body back to baseline\'}</div>\n        </div>\n        <div style="width:100%">\\${liH}</div>\n      </div>\n      <div class="ex-nav">\n        \\${isWarm?\'<div></div>\':\'<button class="btn-prev" onclick="prevEx()">‹</button>\'}\n        <button class="btn-next" onclick="\\${isWarm?\'beginExercises\':\'finishSession\'}()">\\${isWarm?\'BEGIN WORKOUT →\':\'✓ FINISH SESSION\'}</button>\n      </div>\n    </div>';
+}
+
+function beginExercises(){woPhase='exercise';woExIdx=0;renderWoEx()}
+
+function renderWoEx(){
+  if(!WO)return;
+  const ex=WO.exs[woExIdx];
+  const isLast=woExIdx===WO.exs.length-1;
+  const img=exImg(ex.n);
+  updateWoProg();
+  const isTimed=ex.type==='time';
+  let bodyH='';
+  if(isTimed){
+    const dur=ex.dur||30;
+    bodyH='<div class="timed-block">\n      <div class="timed-ring-wrap" id="timed-wrap">\n        <svg viewBox="0 0 160 160" width="160" height="160">\n          <circle class="tr-bg" cx="80" cy="80" r="70"/>\n          <circle class="tr-fill" id="tr-fill" cx="80" cy="80" r="70"/>\n        </svg>\n        <div class="timed-disp"><div class="timed-num" id="timed-disp">\\${dur}</div><div class="timed-sub">seconds</div></div>\n      </div>\n      <div id="set-timed-status" style="margin-bottom:12px;font-size:13px;color:var(--muted)">Set <span id="timed-set-cur">1</span> of \\${ex.s}</div>\n      <div style="display:flex;justify-content:center;gap:10px">\n        <button class="btn-timed ghost" id="timed-rst" onclick="resetTimed()">↺ RESET</button>\n        <button class="btn-timed" id="timed-btn" onclick="togTimed(\\${dur})">▶ START</button>\n      </div>\n      <div id="timed-sets-done" style="margin-top:14px;font-family:Oswald,sans-serif;font-size:13px;color:var(--green)"></div>\n    </div>';
+  } else {
+    const isLoad=!!ex.load;
+    const sH=ex.sets.map((set,si)=>'\n      <div class="set-row \\${set.done?\'done\':\'\'}" id="sr-\\${si}">\n        <div class="set-num">S\\${si+1}</div>\n        <input type="number" class="set-in" id="sw-\\${si}" value="\\${set.w}" placeholder="\\${isLoad?ex.load:\'kg\'}" \\${set.done?\'readonly\':\'\'} onchange="setD(\\${si},\'w\',this.value)">\n        <input type="number" class="set-in" id="sr2-\\${si}" value="\\${set.r}" placeholder="\\${ex.r}" \\${set.done?\'readonly\':\'\'} onchange="setD(\\${si},\'r\',this.value)">\n        <button class="set-chk" id="sc-\\${si}" onclick="togSet(\\${si})">\\${set.done?\'✓\':\'\'}</button>\n      </div>').join('');
+    bodyH='<div style="margin-top:4px">\n      <div class="sets-hdr"><div class="sh-l">#</div><div class="sh-l">\\${isLoad?\'Load\':\'Weight\'}</div><div class="sh-l">Reps</div><div class="sh-l"></div></div>\n      \\${sH}</div>';
+  }
+  const restEl='<div id="rest-banner" style="display:none">\n    <div class="rest-banner">\n      <div class="rb-ring"><svg viewBox="0 0 56 56" width="56" height="56"><circle class="rb-bg" cx="28" cy="28" r="23"/><circle class="rb-fill" id="rb-fill" cx="28" cy="28" r="23"/></svg><div class="rb-disp" id="rb-disp">--</div></div>\n      <div class="rb-right"><div class="rb-lbl">REST PERIOD</div><div class="rb-msg">Next set incoming…</div></div>\n      <button class="btn-skip-sm" onclick="skipRest()">SKIP</button>\n    </div></div>';
+  document.getElementById('wo-body').innerHTML='\n    <div class="ex-slide">\n      <div class="ex-img-wrap">\n        <img class="ex-img" src="\\${img}" alt="\\${ex.n}">\n        <div class="ex-img-ov"></div>\n        <div class="ex-counter">\\${woExIdx+1} / \\${WO.exs.length}</div>\n      </div>\n      <div class="ex-detail">\n        <div class="ex-name-big">\\${ex.n}</div>\n        <div class="ex-equip">\\${ex.load?\'⚖️ \'+ex.load:\'🏋️ Free Weight\'} &nbsp;·&nbsp; \\${ex.s} sets · \\${ex.r} \\${isTimed?\'sec\':\'reps\'}</div>\n        \\${ex.note?\'<div class="ex-note-box">📐 \'+ex.note+\'</div>\':\'\'}\n        \\${bodyH}\n        \\${restEl}\n      </div>\n      <div class="ex-nav">\n        <button class="btn-prev" onclick="prevEx()">‹</button>\n        <button class="btn-next" id="btn-next-ex" onclick="nextEx()">\\${isLast?\'COOLDOWN →\':\'NEXT EXERCISE →\'}</button>\n      </div>\n    </div>';
+  if(isTimed){timedTotal=ex.dur||30;timedRem=timedTotal;timedRunning=false;updTimedDisp();WO.exs[woExIdx]._timedSetDone=0;}
+}
+
+function updateWoProg(){
+  if(!WO)return;
+  const total=WO.exs.length+2;
+  const done=woPhase==='warmup'?0:woPhase==='cooldown'?WO.exs.length+1:woExIdx+1;
+  document.getElementById('wo-pf').style.width=(done/total*100)+'%';
+}
+
+function setD(si,f,v){if(WO&&WO.exs[woExIdx])WO.exs[woExIdx].sets[si][f]=v}
+
+function togSet(si){
+  if(!WO)return;
+  const ex=WO.exs[woExIdx];
+  const set=ex.sets[si];
+  set.done=!set.done;
+  const row=document.getElementById('sr-'+si);
+  const sw=document.getElementById('sw-'+si);
+  const sr=document.getElementById('sr2-'+si);
+  const chk=document.getElementById('sc-'+si);
+  if(set.done){
+    if(sw.value)set.w=sw.value;
+    if(sr.value)set.r=sr.value;
+    row.classList.add('done');chk.textContent='✓';sw.readOnly=true;sr.readOnly=true;
+    if(ex.rest&&si<ex.sets.length-1) startRestTimer(ex.rest);
+    toast('Set logged ✓');
+  } else {
+    row.classList.remove('done');chk.textContent='';sw.readOnly=false;sr.readOnly=false;
+    clearRestTimer();
+  }
+}
+
+// ═══════════════════════════════════════
+// REST TIMER (inline)
+// ═══════════════════════════════════════
+function startRestTimer(s){
+  clearRestTimer();
+  restTotal=s;restRem=s;
+  const banner=document.getElementById('rest-banner');
+  if(banner)banner.style.display='block';
+  updRestBanner();
+  restIv=setInterval(()=>{
+    restRem--;
+    updRestBanner();
+    if(restRem<=0){clearRestTimer();if(navigator.vibrate)navigator.vibrate([150,60,150]);}
+  },1000);
+}
+function updRestBanner(){
+  const el=document.getElementById('rb-disp');
+  const ring=document.getElementById('rb-fill');
+  if(el)el.textContent=restRem+'s';
+  if(ring)ring.style.strokeDashoffset=160*(1-restRem/(restTotal||1));
+}
+function clearRestTimer(){
+  clearInterval(restIv);restIv=null;restRem=0;
+  const b=document.getElementById('rest-banner');if(b)b.style.display='none';
+}
+function skipRest(){clearRestTimer();}
+
+// ═══════════════════════════════════════
+// TIMED EXERCISE
+// ═══════════════════════════════════════
+function togTimed(dur){
+  if(timedRunning){clearInterval(timedIv);timedRunning=false;document.getElementById('timed-btn').textContent='▶ RESUME';}
+  else{
+    if(timedRem<=0){timedRem=dur||timedTotal;}
+    timedRunning=true;document.getElementById('timed-btn').textContent='⏸ PAUSE';
+    timedIv=setInterval(()=>{
+      timedRem--;updTimedDisp();
+      if(timedRem<=0){
+        clearInterval(timedIv);timedRunning=false;
+        if(navigator.vibrate)navigator.vibrate([150,60,150]);
+        document.getElementById('timed-btn').textContent='▶ START';
+        const ex=WO.exs[woExIdx];
+        ex._timedSetDone=(ex._timedSetDone||0)+1;
+        ex.sets[Math.min(ex._timedSetDone-1,ex.s-1)].done=true;
+        const dEl=document.getElementById('timed-sets-done');
+        if(dEl)dEl.textContent='✓ '+ex._timedSetDone+' / '+ex.s+' sets done';
+        const curEl=document.getElementById('timed-set-cur');
+        if(curEl&&ex._timedSetDone<ex.s){curEl.textContent=ex._timedSetDone+1;}
+        if(ex._timedSetDone<ex.s){timedRem=dur||timedTotal;const rest=ex.rest||60;startRestTimer(rest);}
+        else toast('All sets done ✓');
+        updTimedDisp();
+      }
+    },1000);
+  }
+}
+function resetTimed(){clearInterval(timedIv);timedRunning=false;timedRem=timedTotal;updTimedDisp();const b=document.getElementById('timed-btn');if(b)b.textContent='▶ START';}
+function updTimedDisp(){
+  const el=document.getElementById('timed-disp');if(el)el.textContent=timedRem;
+  const ring=document.getElementById('tr-fill');if(ring)ring.style.strokeDashoffset=440*(1-timedRem/(timedTotal||1));
+}
+function clearTimedEx(){clearInterval(timedIv);timedRunning=false;timedIv=null;}
+
+// ═══════════════════════════════════════
+// NAV BETWEEN EXERCISES
+// ═══════════════════════════════════════
+function nextEx(){
+  clearTimedEx();clearRestTimer();
+  if(woPhase==='warmup'){beginExercises();return;}
+  if(woExIdx<WO.exs.length-1){woExIdx++;renderWoEx();}
+  else{woPhase='cooldown';renderWoPhase();}
+}
+function prevEx(){
+  clearTimedEx();clearRestTimer();
+  if(woPhase==='cooldown'){woPhase='exercise';woExIdx=WO.exs.length-1;renderWoEx();}
+  else if(woExIdx>0){woExIdx--;renderWoEx();}
+  else{woPhase='warmup';renderWoPhase();}
+}
+
+// ═══════════════════════════════════════
+// FINISH SESSION
+// ═══════════════════════════════════════
+function finishSession(){
+  if(!WO)return;
+  clearInterval(woClkIv);clearTimedEx();clearRestTimer();
+  const dur=Math.max(1,Math.round((Date.now()-WO.startTime)/60000));
+  const allSets=WO.exs.reduce(function(a,ex){return a.concat(ex.sets.filter(function(s){return s.done;}));}, []);
+  const totalSets=allSets.length;
+  const vol=allSets.reduce((a,s)=>{const w=parseFloat(s.w)||0,r=parseFloat(s.r)||0;return a+w*r;},0);
+  const ss=DB.g('sessions',[]);
+  ss.push({id:Date.now(),date:new Date().toISOString(),progId:WO.progId,programName:WO.progName,dayId:WO.dayId,dayName:WO.dayName,duration:dur,totalSets,volume:Math.round(vol),exs:WO.exs.map(ex=>({n:ex.n,sets:ex.sets.filter(s=>s.done).map(s=>({w:s.w,r:s.r}))}))});
+  DB.s('sessions',ss);
+  updatePRs(WO.exs);
+  document.getElementById('sc-dur').textContent=dur+'m';
+  document.getElementById('sc-sets').textContent=totalSets;
+  document.getElementById('sc-vol').textContent=Math.round(vol);
+  document.getElementById('sc-sub').textContent=WO.dayName+' · '+WO.progName;
+  document.getElementById('wo').classList.remove('open');
+  document.getElementById('sc').classList.add('vis');
+}
+function closeSC(){document.getElementById('sc').classList.remove('vis');WO=null;nav('home')}
+function updatePRs(exs){const prs=DB.g('prs',{});exs.forEach(ex=>ex.sets.filter(s=>s.done&&s.w).forEach(s=>{const w=parseFloat(s.w)||0;if(!prs[ex.n]||w>prs[ex.n].w)prs[ex.n]={w,r:s.r,d:new Date().toDateString()};}));DB.s('prs',prs)}
+
+document.getElementById('wo-x').addEventListener('click',()=>{
+  if(confirm('End session? Unsaved progress will be lost.')){
+    clearInterval(woClkIv);clearTimedEx();clearRestTimer();
+    document.getElementById('wo').classList.remove('open');WO=null;
+  }
+});
+
+// ═══════════════════════════════════════
+// PROGRESS
+// ═══════════════════════════════════════
+function renderProgress(){
+  const wl=DB.g('weightLog',[]);
+  const bm=DB.g('bodyMeasurements',{});
+  const ss=DB.g('sessions',[]);
+  const prs=DB.g('prs',{});
+  const lastW=wl.length?wl[wl.length-1].weight:'';
+  const prH=Object.keys(prs).length?Object.entries(prs).slice(0,6).map(([n,d])=>'<div class="pr-item"><div class="pr-n">\\${n.length>22?n.slice(0,22)+\'…\':n}</div><div class="pr-v">\\${d.w}kg</div><div class="pr-d">\\${d.r} reps · \\${d.d}</div></div>').join(''):'<div class="empty" style="grid-column:span 2;padding:16px;font-size:12px">No PRs yet — log weights during sessions</div>';
+  const measFields=[['Chest','chest'],['Waist','waist'],['Hips','hips'],['Arms','arms'],['Thighs','thighs'],['Calves','calves']];
+  const measH=measFields.map(([l,k])=>'<div class="body-item"><div class="bi-l">\\${l} (cm)</div><input class="bi-in" type="number" value="\\${bm[k]||\'\'}" placeholder="—" onchange="saveMeas(\'\\${k}\',this.value)"></div>').join('');
+  const totalVol=ss.reduce((a,s)=>a+(s.volume||0),0);
+  const sessH=[...ss].reverse().slice(0,6).map(s=>'<div class="act-item"><div class="ai-dot work"></div><div><div class="ai-n">\\${s.dayName}</div><div class="ai-m">\\${s.programName} · \\${s.totalSets} sets · \\${s.volume||0}kg vol</div></div><div style="text-align:right"><div class="ai-v">\\${s.duration}m</div><div style="font-size:10px;color:var(--dim)">\\${fmtD(s.date)}</div></div></div>').join('')||'<div class="empty" style="padding:14px;font-size:12px">No sessions yet</div>';
+  document.getElementById('progress-c').innerHTML='\n    <div class="slbl" style="margin-top:8px">Body Weight</div>\n    <div class="m-row">\n      <input type="number" class="m-in" id="w-inp" placeholder="\\${lastW||\'75.0\'}" step="0.1">\n      <button class="btn-log" onclick="logWeight()">LOG</button>\n    </div>\n    <div class="chart-wrap"><div class="cw-title">Weight Trend</div><canvas id="wChart" height="120"></canvas>\\${!wl.length?\'<div class="empty" style="padding:8px;font-size:12px">Log weight to see trend</div>\':\'\'}</div>\n    <div class="chart-wrap"><div class="cw-title">Session Volume (last 7)</div><canvas id="sChart" height="80"></canvas></div>\n    <div class="slbl">Body Measurements</div>\n    <div class="body-grid">\\${measH}</div>\n    <div class="slbl">Personal Records</div>\n    <div class="pr-grid">\\${prH}</div>\n    <div class="slbl">All Sessions — Total Volume: \\${Math.round(totalVol/1000)}t</div>\n    \\${sessH}<div style="height:12px"></div>';
+  setTimeout(()=>{if(wl.length)drawWChart(wl);drawSChart(ss);},40);
+}
+function logWeight(){const v=parseFloat(document.getElementById('w-inp').value);if(!v||v<20||v>300){toast('Enter valid weight');return;}const l=DB.g('weightLog',[]);l.push({date:new Date().toISOString(),weight:v});DB.s('weightLog',l);toast('Weight logged: '+v+'kg');renderProgress()}
+function saveMeas(k,v){const m=DB.g('bodyMeasurements',{});m[k]=parseFloat(v)||0;DB.s('bodyMeasurements',m);}
+function drawWChart(wl){
+  const c=document.getElementById('wChart');if(!c)return;
+  const ctx=c.getContext('2d');const W=c.offsetWidth,H=120,dpr=window.devicePixelRatio||1;
+  c.width=W*dpr;c.height=H*dpr;ctx.scale(dpr,dpr);
+  const data=wl.slice(-14);const ws=data.map(d=>d.weight);const mn=Math.min(...ws)-1,mx=Math.max(...ws)+1;
+  const p={t:8,r:8,b:18,l:34};const cW=W-p.l-p.r,cH=H-p.t-p.b;
+  ctx.clearRect(0,0,W,H);
+  for(let i=0;i<=3;i++){const y=p.t+cH*i/3;ctx.strokeStyle='#1C2A1C';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke();ctx.fillStyle='#334433';ctx.font='10px DM Sans';ctx.textAlign='right';ctx.fillText((mx-(mx-mn)*i/3).toFixed(1),p.l-3,y+4);}
+  const pts=data.map((d,i)=>({x:p.l+(i/(data.length-1||1))*cW,y:p.t+((mx-d.weight)/(mx-mn))*cH}));
+  const g=ctx.createLinearGradient(0,p.t,0,H);g.addColorStop(0,'rgba(168,230,60,.3)');g.addColorStop(1,'rgba(168,230,60,0)');
+  ctx.beginPath();pts.forEach((pt,i)=>i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));ctx.lineTo(pts[pts.length-1].x,H-p.b);ctx.lineTo(pts[0].x,H-p.b);ctx.closePath();ctx.fillStyle=g;ctx.fill();
+  ctx.beginPath();ctx.strokeStyle='#A8E63C';ctx.lineWidth=2;ctx.lineJoin='round';pts.forEach((pt,i)=>i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));ctx.stroke();
+  ctx.fillStyle='#A8E63C';pts.forEach(pt=>{ctx.beginPath();ctx.arc(pt.x,pt.y,3,0,Math.PI*2);ctx.fill();});
+}
+function drawSChart(ss){
+  const c=document.getElementById('sChart');if(!c)return;
+  const ctx=c.getContext('2d');const W=c.offsetWidth,H=80,dpr=window.devicePixelRatio||1;
+  c.width=W*dpr;c.height=H*dpr;ctx.scale(dpr,dpr);
+  const l7=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));d.setHours(0,0,0,0);return{lbl:['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()],vol:ss.filter(s=>new Date(s.date).toDateString()===d.toDateString()).reduce((a,s)=>a+(s.volume||0),0)};});
+  const p={t:6,r:6,b:18,l:6};const cW=W-p.l-p.r,cH=H-p.t-p.b;const mx=Math.max(...l7.map(d=>d.vol),1);
+  const gp=cW/7;const bw=gp*0.55;
+  ctx.clearRect(0,0,W,H);
+  l7.forEach((d,i)=>{const x=p.l+gp*i+(gp-bw)/2;const bh=Math.max((d.vol/mx)*cH,d.vol?4:0);const y=p.t+cH-bh;ctx.fillStyle=d.vol?'#A8E63C':'#1C2A1C';ctx.rect(x,y,bw,Math.max(bh,3));ctx.fill();ctx.fillStyle='#334433';ctx.font='10px DM Sans';ctx.textAlign='center';ctx.fillText(d.lbl,x+bw/2,H-4);});
+}
+
+// ═══════════════════════════════════════
+// DIET
+// ═══════════════════════════════════════
+function getTodayDiet(){const l=DB.g('dietLog',[]);const td=new Date().toDateString();return l.find(d=>d.date===td)||{date:td,entries:[],water:0}}
+function saveTodayDiet(dd){const l=DB.g('dietLog',[]);const i=l.findIndex(d=>d.date===dd.date);if(i>=0)l[i]=dd;else l.push(dd);DB.s('dietLog',l)}
+
+function renderDiet(){
+  const dd=getTodayDiet();
+  const tgt=DB.g('dietTargets',{cal:2200,prot:160,carb:250,fat:70});
+  const cal=dd.entries.reduce((a,e)=>a+(e.cal||0),0);
+  const prot=dd.entries.reduce((a,e)=>a+(e.prot||0),0);
+  const carb=dd.entries.reduce((a,e)=>a+(e.carb||0),0);
+  const fat=dd.entries.reduce((a,e)=>a+(e.fat||0),0);
+  const pct=(v,t)=>Math.min(100,Math.round((v/(t||1))*100));
+  const macroH='<div class="macro-grid">\n    <div class="mg cal"><div class="mv">\\${cal}</div><div class="ml">kcal</div></div>\n    <div class="mg prot"><div class="mv">\\${prot}g</div><div class="ml">Protein</div></div>\n    <div class="mg carb"><div class="mv">\\${carb}g</div><div class="ml">Carbs</div></div>\n    <div class="mg fat"><div class="mv">\\${fat}g</div><div class="ml">Fat</div></div>\n  </div>\n  <div class="card" style="padding:12px 14px">\n    \\${[[\'Calories\',cal,tgt.cal,\'#A8E63C\'],[\'Protein\',prot,tgt.prot,\'#52A8E6\'],[\'Carbs\',carb,tgt.carb,\'#52C87A\'],[\'Fat\',fat,tgt.fat,\'#E05252\']].map(([l,v,t,c])=>'
+    <div class="target-row"><div style="width:60px;font-size:11px;color:var(--muted)">\${l}</div>
+    <div class="target-bar-bg"><div class="target-bar-fill" style="width:\${pct(v,t)}%;background:\${c}"></div></div>
+    <div class="target-lbl">\${v}/\${t}</div></div>').join(\'\')}\n  </div>';
+  const eH=dd.entries.length?dd.entries.map((e,i)=>'<div class="food-item"><div><div class="fi-n">\\${e.food}</div><div class="fi-m">P:\\${e.prot||0}g C:\\${e.carb||0}g F:\\${e.fat||0}g</div></div><div class="fi-c">\\${e.cal||0} kcal</div><button class="fi-del" onclick="delFood(\\${i})">×</button></div>').join(''):'<div class="empty" style="padding:12px;font-size:12px">Nothing logged today</div>';
+  document.getElementById('diet-c').innerHTML='\n    <div class="slbl" style="margin-top:8px">Daily Nutrition</div>\n    \\${macroH}\n    <div class="water-card"><div class="wl"><p>Hydration</p><h3>\\${dd.water} glasses 💧</h3></div><div class="w-btns"><button class="w-btn" onclick="adjW(-1)">−</button><button class="w-btn" onclick="adjW(1)">+</button></div></div>\n    <div class="food-form">\n      <div class="slbl" style="margin-top:0">Log Meal</div>\n      <div class="food-grid">\n        <input class="fi" id="ff-n" placeholder="Food name" type="text" style="grid-column:span 3">\n      </div>\n      <div class="food-grid" style="margin-top:6px">\n        <input class="fi" id="ff-cal" type="number" placeholder="kcal">\n        <input class="fi" id="ff-p" type="number" placeholder="Protein g">\n        <input class="fi" id="ff-c" type="number" placeholder="Carbs g">\n      </div>\n      <div class="food-grid" style="margin-top:6px;grid-template-columns:1fr 1fr">\n        <input class="fi" id="ff-f" type="number" placeholder="Fat g">\n        <button class="btn-prime" onclick="addFood()" style="padding:10px;font-size:12px">+ ADD</button>\n      </div>\n    </div>\n    <div class="slbl">Today\'s Food Log</div>\n    \\${eH}\n    <div class="card" style="margin-top:8px">\n      <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--lime);margin-bottom:10px;font-weight:600">NUTRITIONAL BLUEPRINT</div>\n      <div style="font-size:12px;color:var(--muted);line-height:2">\n        🥩 <b style="color:var(--text)">Structural Proteins</b> — Poultry, lean fish, ruminant meats<br>\n        🌾 <b style="color:var(--text)">Complex Carbs</b> — Tubers, unrefined grains, legumes<br>\n        🥦 <b style="color:var(--text)">Fibrous Micronutrients</b> — Leafy greens, cruciferous veg<br>\n        🫒 <b style="color:var(--text)">Essential Lipids</b> — Clean oils, specific nuts\n      </div>\n    </div>\n    <button class="btn-prime" style="margin-top:10px;background:var(--s2);border:1px solid var(--border);color:var(--muted);font-size:12px" onclick="openTargetsModal()">⚙️ SET NUTRITION TARGETS</button>\n    <div style="height:12px"></div>';
+}
+function addFood(){
+  const food=document.getElementById('ff-n').value.trim();
+  if(!food){toast('Enter food name');return;}
+  const e={food,cal:parseInt(document.getElementById('ff-cal').value)||0,prot:parseInt(document.getElementById('ff-p').value)||0,carb:parseInt(document.getElementById('ff-c').value)||0,fat:parseInt(document.getElementById('ff-f').value)||0};
+  const dd=getTodayDiet();dd.entries.push(e);saveTodayDiet(dd);toast(food+' logged');renderDiet();
+}
+function delFood(i){const dd=getTodayDiet();dd.entries.splice(i,1);saveTodayDiet(dd);renderDiet()}
+function adjW(d){const dd=getTodayDiet();dd.water=Math.max(0,(dd.water||0)+d);saveTodayDiet(dd);renderDiet()}
+function openTargetsModal(){
+  const t=DB.g('dietTargets',{cal:2200,prot:160,carb:250,fat:70});
+  showModal('<div class="modal-title">Nutrition Targets</div>\n    \\${[[\'Daily Calories (kcal)\',\'cal\',t.cal],[\'Protein (g)\',\'prot\',t.prot],[\'Carbs (g)\',\'carb\',t.carb],[\'Fat (g)\',\'fat\',t.fat]].map(([l,k,v])=>'<label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">\${l}</label><input class="modal-input" id="tgt-\${k}" type="number" value="\${v}">').join(\'\')}\n    <button class="btn-prime" onclick="saveTargets()">SAVE TARGETS</button>');
+}
+function saveTargets(){
+  const t={cal:parseInt(document.getElementById('tgt-cal').value)||2200,prot:parseInt(document.getElementById('tgt-prot').value)||160,carb:parseInt(document.getElementById('tgt-carb').value)||250,fat:parseInt(document.getElementById('tgt-fat').value)||70};
+  DB.s('dietTargets',t);closeModal();toast('Targets saved');renderDiet();
+}
+
+// ═══════════════════════════════════════
+// TIMER PAGE
+// ═══════════════════════════════════════
+function renderTimer(){
+  document.getElementById('timer-c').innerHTML='\n    <div class="timer-pg">\n      <div style="font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-top:8px">STANDALONE TIMER</div>\n      <div class="t-ring-wrap">\n        <svg viewBox="0 0 210 210" width="210" height="210">\n          <circle class="t-bg" cx="105" cy="105" r="95"/>\n          <circle class="t-fill" id="t-fill" cx="105" cy="105" r="95"/>\n        </svg>\n        <div class="t-disp"><div class="t-num" id="t-num">1:30</div><div class="t-sub">remaining</div></div>\n      </div>\n      <div class="t-presets">\n        <button class="tpb" onclick="setTmr(30,this)">30s</button>\n        <button class="tpb" onclick="setTmr(45,this)">45s</button>\n        <button class="tpb on" onclick="setTmr(90,this)">90s</button>\n        <button class="tpb" onclick="setTmr(120,this)">2 min</button>\n        <button class="tpb" onclick="setTmr(180,this)">3 min</button>\n        <button class="tpb" onclick="setTmr(300,this)">5 min</button>\n      </div>\n      <div class="t-btns">\n        <button class="btn-t-g" onclick="rstTmr()">↺ RESET</button>\n        <button class="btn-t" id="t-btn" onclick="togTmr()">▶ START</button>\n      </div>\n    </div>';
+  stTotal=90;stRem=90;stRunning=false;clearInterval(stIv);updTmr();
+}
+function setTmr(s,el){clearInterval(stIv);stRunning=false;stTotal=s;stRem=s;document.querySelectorAll('.tpb').forEach(b=>b.classList.remove('on'));el.classList.add('on');const b=document.getElementById('t-btn');if(b)b.textContent='▶ START';updTmr();}
+function togTmr(){
+  if(stRunning){clearInterval(stIv);stRunning=false;const b=document.getElementById('t-btn');if(b)b.textContent='▶ RESUME';}
+  else{if(stRem<=0)stRem=stTotal;stRunning=true;const b=document.getElementById('t-btn');if(b)b.textContent='⏸ PAUSE';
+    stIv=setInterval(()=>{stRem--;updTmr();if(stRem<=0){clearInterval(stIv);stRunning=false;if(navigator.vibrate)navigator.vibrate([200,80,200]);const b=document.getElementById('t-btn');if(b)b.textContent='▶ START';}},1000);}
+}
+function rstTmr(){clearInterval(stIv);stRunning=false;stRem=stTotal;const b=document.getElementById('t-btn');if(b)b.textContent='▶ START';updTmr();}
+function updTmr(){const m=Math.floor(stRem/60),s=stRem%60;const el=document.getElementById('t-num');if(el)el.textContent=m+':'+(s+'').padStart(2,'0');const ring=document.getElementById('t-fill');if(ring)ring.style.strokeDashoffset=597*(1-stRem/(stTotal||1));}
+
+// ═══════════════════════════════════════
+// PROFILE / SETTINGS
+// ═══════════════════════════════════════
+function renderProfile(){
+  const p=DB.g('profile',{name:'NEVO',age:'',height:'',weight:'',goal:'Build Muscle',unit:'kg'});
+  const av='data:image/jpeg;base64,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';
+  document.getElementById('profile-c').innerHTML='\n    <div class="profile-av-wrap">\n      <img class="profile-av" src="\\${av}" alt="Nevo">\n      <div class="profile-name">\\${p.name||\'NEVO\'}</div>\n      <div class="profile-sub">\\${p.goal||\'Build Muscle\'} · \\${p.unit||\'kg\'}</div>\n    </div>\n    <div class="slbl">Personal Info</div>\n    <div class="settings-section">\n      \\${[[\'👤\',\'Name\',p.name||\'—\',\'editProfile("name")\'],[\'🎂\',\'Age\',p.age?p.age+\' yrs\':\'—\',\'editProfile("age")\'],[\'📏\',\'Height\',p.height?p.height+\'cm\':\'—\',\'editProfile("height")\'],[\'⚖️\',\'Goal Weight\',p.goalWeight?p.goalWeight+(p.unit||\'kg\'):\'—\',\'editProfile("goalWeight")\'],[\'🎯\',\'Primary Goal\',p.goal||\'—\',\'editProfileGoal()\'],[\'📐\',\'Units\',p.unit||\'kg\',\'toggleUnit()\']].map(([ic,l,v,fn])=>'
+      <div class="settings-row" onclick="\${fn}">
+        <div class="sr-ic">\${ic}</div><div class="sr-txt"><div class="sr-lbl">\${l}</div></div><div style="color:var(--muted);font-size:13px">\${v}</div><div class="sr-arrow">›</div>
+      </div>').join(\'\')}\n    </div>\n    <div class="slbl">Training Settings</div>\n    <div class="settings-section">\n      <div class="settings-row" onclick="openCustomWorkout()"><div class="sr-ic">💪</div><div class="sr-txt"><div class="sr-lbl">Custom Workouts</div><div class="sr-sub">Add or edit workout days</div></div><div class="sr-arrow">›</div></div>\n      <div class="settings-row" onclick="openPRs()"><div class="sr-ic">🏆</div><div class="sr-txt"><div class="sr-lbl">Personal Records</div><div class="sr-sub">View all PRs</div></div><div class="sr-arrow">›</div></div>\n      <div class="settings-row" onclick="exportData()"><div class="sr-ic">📤</div><div class="sr-txt"><div class="sr-lbl">Export Data</div><div class="sr-sub">Download workout log as JSON</div></div><div class="sr-arrow">›</div></div>\n    </div>\n    <div class="slbl">App Settings</div>\n    <div class="settings-section">\n      <div class="settings-row"><div class="sr-ic">🌙</div><div class="sr-txt"><div class="sr-lbl">Dark Mode</div></div><button class="toggle on" onclick="toast(\'Dark mode always on\')"></button></div>\n      <div class="settings-row" onclick="clearData()"><div class="sr-ic">🗑️</div><div class="sr-txt"><div class="sr-lbl">Clear All Data</div><div class="sr-sub">Reset app — cannot be undone</div></div><div class="sr-arrow">›</div></div>\n    </div>\n    <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--dim);letter-spacing:.1em">NEVO CINEMATIC PROTOCOL · v2.0</div>\n    <div style="height:12px"></div>';
+}
+function editProfile(field){
+  const p=DB.g('profile',{});
+  const labels={name:'Your Name',age:'Age (years)',height:'Height (cm)',goalWeight:'Goal Weight'};
+  showModal('<div class="modal-title">Edit \\${labels[field]}</div>\n    <input class="modal-input" id="ep-inp" type="\\${field===\'name\'?\'text\':\'number\'}" value="\\${p[field]||\'\'}" placeholder="Enter \\${labels[field]}">\n    <button class="btn-prime" onclick="saveProfileField(\'\\${field}\')">SAVE</button>');
+}
+function saveProfileField(f){const v=document.getElementById('ep-inp').value;const p=DB.g('profile',{});p[f]=v;DB.s('profile',p);closeModal();renderProfile();toast('Saved')}
+function editProfileGoal(){
+  showModal('<div class="modal-title">Primary Goal</div>\n    \\${[\'Build Muscle\',\'Lose Fat\',\'Recomposition\',\'Strength\',\'Endurance\'].map(g=>'<button class="btn-prime" style="margin-bottom:8px;background:var(--s2);border:1px solid var(--border);color:var(--text);font-size:13px" onclick="saveGoal('\${g}')">\${g}</button>').join(\'\')}');
+}
+function saveGoal(g){const p=DB.g('profile',{});p.goal=g;DB.s('profile',p);closeModal();renderProfile();toast('Goal updated')}
+function toggleUnit(){const p=DB.g('profile',{});p.unit=p.unit==='kg'?'lbs':'kg';DB.s('profile',p);renderProfile();toast('Unit: '+p.unit)}
+function exportData(){const data={sessions:DB.g('sessions',[]),weightLog:DB.g('weightLog',[]),prs:DB.g('prs',{}),dietLog:DB.g('dietLog',[]),bodyMeasurements:DB.g('bodyMeasurements',{})};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nevo-data.json';a.click();toast('Data exported')}
+function clearData(){if(confirm('Clear ALL data? This cannot be undone.')){['sessions','weightLog','prs','dietLog','bodyMeasurements','profile','dietTargets'].forEach(k=>localStorage.removeItem('nv_'+k));toast('Data cleared');renderProfile()}}
+function openPRs(){
+  const prs=DB.g('prs',{});
+  const content=Object.keys(prs).length?Object.entries(prs).map(([n,d])=>'<div class="act-item" style="margin-bottom:6px"><div class="ai-n" style="font-size:12px">\\${n}</div><div style="text-align:right"><div class="ai-v" style="color:var(--lime)">\\${d.w}kg</div><div style="font-size:10px;color:var(--dim)">\\${d.r} reps</div></div></div>').join(''):'<div class="empty" style="padding:16px;font-size:12px">No PRs yet</div>';
+  showModal('<div class="modal-title">Personal Records 🏆</div>\\${content}<button class="btn-prime" style="margin-top:12px" onclick="closeModal()">CLOSE</button>');
+}
+function openCustomWorkout(){
+  showModal('<div class="modal-title">Custom Workouts</div>\n    <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px">You can modify the built-in programs directly by editing the PROGS object in the source code, or add new exercises below (coming soon).</div>\n    <div style="font-size:11px;color:var(--dim);text-align:center;padding:8px">Full custom workout editor coming in v3.0</div>\n    <button class="btn-prime" style="margin-top:12px" onclick="closeModal()">GOT IT</button>');
+}
+
+// ═══════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════
+function showModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal-ov').classList.add('vis')}
+function closeModal(){document.getElementById('modal-ov').classList.remove('vis')}
+function closeModal(e){if(!e||e.target===document.getElementById('modal-ov'))document.getElementById('modal-ov').classList.remove('vis')}
+
+// ═══════════════════════════════════════
+// PWA
+// ═══════════════════════════════════════
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+(function(){
+  setTimeout(()=>document.getElementById('spf').style.width='100%',80);
+  setTimeout(()=>{
+    const sp=document.getElementById('splash');
+    sp.style.opacity='0';
+    setTimeout(()=>{sp.style.display='none';document.getElementById('app').style.display='flex';renderHome();},520);
+  },1900);
+})();
+</script>
+</body>
+</html>
